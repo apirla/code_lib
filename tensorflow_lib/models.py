@@ -4,7 +4,14 @@ import math
 
 
 def weight_variable(shape,trainable = True,f_in = None,f_out = None):
-    """weight_variable generates a weight variable of a given shape."""
+    '''
+    
+    :param shape:  a list that describe the shape of tensor
+    :param trainable: 
+    :param f_in: 
+    :param f_out: 
+    :return: a variable
+    '''
     if f_in and f_out:#若有f_in、f_out 输入,Xavier权重初始化
         initial = tf.random_uniform(shape,minval=-math.sqrt(6.0/(f_in+f_out)),maxval=math.sqrt(6.0/(f_in+f_out)),dtype=tf.float32)
     else:
