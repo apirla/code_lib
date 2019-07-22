@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow_lib.models import weight_variable
+from tensorflow_lib.input import get_file
 
-x = weight_variable([20],True,64,2)
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
+img,label = get_file('D:/python文件/code_lib/tensorflow_lib/train',print_map=True)
 
-print(sess.run(x.value()))
+print(img)
+print(label)
