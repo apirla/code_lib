@@ -75,3 +75,102 @@ def conv_layer(name, input_data, out_channel, trainable = True,strides = 1):
         res = tf.nn.bias_add(conv_res, biases)
         out = tf.nn.relu(res, name=name)
     return out
+def identity_block( X_input, kernel_size, in_filter, out_filters, stage, block, training,trainable = True):
+    """
+    三层卷积残差块，无升降维
+    !!! in_filter must the same as out_filters
+    Implementation of the identity block as defined in Figure 3
+    Arguments:
+    X -- input tensor of shape (m, n_H_prev, n_W_prev, n_C_prev)
+    kernel_size -- integer, specifying the shape of the middle CONV's window for the main path
+    filters -- python list of integers, defining the number of filters in the CONV layers of the main path
+    stage -- integer, used to name the layers, depending on their position in the network
+    block -- string/character, used to name the layers, depending on their position in the network
+    training -- train or test for bn
+    trainable -- train or test for filters
+    Returns:
+    X -- output of the identity block, tensor of shape (n_H, n_W, n_C)
+    """
+
+    # defining name basis
+    block_name = 'res' + str(stage) + block
+
+    f1 = out_filters
+    f2 = out_filters
+    f3 = out_filters
+    with tf.variable_scope(block_name):
+        X_shortcut = X_input
+
+        #first
+        W_conv1 = weight_variable([1, 1, in_filter, f1],trainable=trainable)
+        X = tf.nn.conv2d(X_input, W_conv1, strides=[1, 1, 1, 1], padding='SAME')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+        X = tf.nn.relu(X)
+
+        #second
+        W_conv2 = weight_variable([kernel_size, kernel_size, f1, f2],trainable=trainable)
+        X = tf.nn.conv2d(X, W_conv2, strides=[1, 1, 1, 1], padding='SAME')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+        X = tf.nn.relu(X)
+
+        #third
+
+        W_conv3 = weight_variable([1, 1, f2, f3],trainable=trainable)
+        X = tf.nn.conv2d(X, W_conv3, strides=[1, 1, 1, 1], padding='VALID')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+
+        #final step
+        add = tf.add(X, X_shortcut)
+        add_result = tf.nn.relu(add)
+
+    return add_result
+def convolutional_block( X_input, kernel_size, in_filter,
+                        out_filters, stage, block, training, stride=2,trainable = True):
+    """
+    卷积残差块，shortcut经过一次卷积，主路径3层卷积
+    Implementation of the convolutional block as defined in Figure 4
+    Arguments:
+    X -- input tensor of shape (m, n_H_prev, n_W_prev, n_C_prev)
+    kernel_size -- integer, specifying the shape of the middle CONV's window for the main path
+    filters -- python list of integers, defining the number of filters in the CONV layers of the main path
+    stage -- integer, used to name the layers, depending on their position in the network
+    block -- string/character, used to name the layers, depending on their position in the network
+    training -- train or test for bn
+    stride -- Integer, specifying the stride to be used
+    trainable -- train or test for filter
+    Returns:
+    X -- output of the convolutional block, tensor of shape (n_H, n_W, n_C)
+    """
+
+    # defining name basis
+    block_name = 'res' + str(stage) + block
+    with tf.variable_scope(block_name):
+        f1, f2, f3 = out_filters
+
+        x_shortcut = X_input
+        #first
+        W_conv1 = weight_variable([1, 1, in_filter, f1],trainable=trainable)
+        X = tf.nn.conv2d(X_input, W_conv1,strides=[1, stride, stride, 1],padding='VALID')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+        X = tf.nn.relu(X)
+
+        #second
+        W_conv2 = weight_variable([kernel_size, kernel_size, f1, f2],trainable=trainable)
+        X = tf.nn.conv2d(X, W_conv2, strides=[1,1,1,1], padding='SAME')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+        X = tf.nn.relu(X)
+
+        #third
+        W_conv3 = weight_variable([1,1, f2,f3],trainable=trainable)
+        X = tf.nn.conv2d(X, W_conv3, strides=[1, 1, 1,1], padding='VALID')
+        X = tf.layers.batch_normalization(X, axis=3, training=training)
+
+        #shortcut path
+        W_shortcut = weight_variable([1, 1, in_filter, f3],trainable=trainable)
+        x_shortcut = tf.nn.conv2d(x_shortcut, W_shortcut, strides=[1, stride, stride, 1], padding='VALID')
+
+        #final
+        add = tf.add(x_shortcut, X)
+        add_result = tf.nn.relu(add)
+
+    return add_result

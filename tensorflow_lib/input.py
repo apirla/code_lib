@@ -1,7 +1,14 @@
 import tensorflow as tf
 import numpy as np
 import os
+
 def get_file(file_dir,print_map = False):
+    '''
+    
+    :param file_dir: 训练集文件夹根目录
+    :param print_map: bool值，是否打印label名称与其转换成的数字对应关系
+    :return: 图片列表，label列表
+    '''
 
     images = []#图片
     temp = []#文件夹
@@ -50,6 +57,16 @@ def get_file(file_dir,print_map = False):
     label_list = [int(float(i)) for i in label_list]
     return image_list,label_list
 def get_batch(image_list, label_list, img_width, img_height, batch_size, capacity):
+    '''
+    
+    :param image_list: get_file 的第一个返回值，读取出来的图片列表
+    :param label_list: get_file 的第二个返回值，读取出来的label列表
+    :param img_width:  模型要求输入的图片宽度
+    :param img_height: 模型要求输入的图片高度
+    :param batch_size: 一个块的大小
+    :param capacity:   数据池的最大容量
+    :return: 标准化后的图片数据块，label块
+    '''
     image = tf.cast(image_list, tf.string)#将图片转化为string
     label = tf.cast(label_list, tf.int32)#将结果转化为int
 
